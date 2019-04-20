@@ -73,75 +73,72 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <Button
+    <ImageButton
         android:id="@+id/fButton"
-        style="@android:style/Widget.Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="164dp"
         android:layout_marginEnd="8dp"
-        android:background="@drawable/baseline_expand_less_black_48"
-        android:outlineProvider="paddedBounds"
+        android:outlineProvider="none"
+        android:src="@drawable/baseline_expand_less_black_48"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.556"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+    <ImageButton
         android:id="@+id/lButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:background="@drawable/baseline_chevron_left_black_48"
-        android:outlineProvider="bounds"
+        android:outlineProvider="none"
+        android:src="@drawable/baseline_chevron_left_black_48"
         app:layout_constraintEnd_toEndOf="@+id/sButton"
         app:layout_constraintTop_toBottomOf="@+id/sButton" />
 
-    <Button
+    <ImageButton
         android:id="@+id/rButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:background="@drawable/baseline_chevron_right_black_48"
-        android:outlineProvider="bounds"
+        android:layout_marginTop="1dp"
+        android:outlineProvider="none"
+        android:src="@drawable/baseline_chevron_right_black_48"
         app:layout_constraintStart_toStartOf="@+id/mButton"
         app:layout_constraintTop_toBottomOf="@+id/mButton" />
 
-    <Button
+    <ImageButton
         android:id="@+id/bButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="264dp"
+        android:layout_marginTop="300dp"
         android:layout_marginEnd="8dp"
-        android:background="@drawable/baseline_expand_more_black_48"
-        android:outlineProvider="paddedBounds"
+        android:outlineProvider="none"
+        android:src="@drawable/baseline_expand_more_black_48"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.556"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+    <ImageButton
         android:id="@+id/sButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="72dp"
+        android:layout_height="67dp"
         android:layout_marginTop="164dp"
         android:layout_marginEnd="4dp"
-        android:background="@drawable/baseline_settings_input_antenna_black_48dp"
-        android:outlineProvider="paddedBounds"
+        android:outlineProvider="none"
+        android:src="@drawable/baseline_settings_input_antenna_black_48dp"
         app:layout_constraintEnd_toStartOf="@+id/bButton"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+    <ImageButton
         android:id="@+id/mButton"
-        style="@android:style/Widget.Button.Toggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="72dp"
+        android:layout_height="68dp"
         android:layout_marginStart="4dp"
         android:layout_marginTop="164dp"
-        android:background="@drawable/baseline_audiotrack_black_48dp"
-        android:outlineProvider="paddedBounds"
+        android:outlineProvider="none"
+        android:src="@drawable/baseline_audiotrack_black_48dp"
         app:layout_constraintStart_toEndOf="@+id/bButton"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -177,7 +174,7 @@
         app:srcCompat="@android:drawable/presence_online"
         tools:visibility="gone" />
 
-    <Button
+    <ImageButton
         android:id="@+id/restartButton"
         android:layout_width="87dp"
         android:layout_height="39dp"

@@ -1,6 +1,7 @@
 package android.example.rescuerobot;
 
 import android.annotation.SuppressLint;
+import android.content.res.Resources;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,13 +24,11 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.text.DecimalFormat;
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener{
     final String ADDRESS =  "192.168.1.1";
     final int PORT = 288;
-
-    Button fowardButton,backButton,leftButton,rightButton,songButton,scanButton,restartButton;
+    ImageButton fowardButton,backButton,leftButton,rightButton,songButton,scanButton,restartButton;
     TextView receivedText;
     EditText MTargetGoal,RTargetGoal;
     Connection connection;
@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
         receivedText = findViewById(R.id.RecievedText);
 
+        //Note this class implements View.OnTouchListener
         fowardButton.setOnTouchListener(this);
         backButton.setOnTouchListener(this);
         leftButton.setOnTouchListener(this);
@@ -60,12 +61,17 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         restartButton.setOnTouchListener(this);
 
 
+        //Call connection constructor and boot it
         connection = new Connection(ADDRESS,PORT);
         Log.v("Ben","Connecting");
         connection.boot();
 
     }
 
+    /**
+     * Method designed to handle an input
+     * @param mes
+     */
     protected void handleInput(String mes) {
         Log.v("Ben", "Received:" + mes);
     }
@@ -73,24 +79,27 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View v, MotionEvent event) {
+        //If we need to restart
         if (v.getId()==R.id.restartButton) {
             connection.boot();
             return true;
         }
 
+        //If not connected do nothing
         if(!connection.isConnected()){
             Log.v("Ben", "Button clicked without connection");
             return true;
         }
 
-//        if (event.getAction() == MotionEvent.ACTION_UP) {
-//            connection.sendString(".t,");
-//            return true;
-//        }
+        //Get move targets
         String MGoal = MTargetGoal.getText().toString();
         String RGoal = RTargetGoal.getText().toString();
         switch (v.getId()){
             case R.id.fButton:
+               /*
+               if button pressed not released
+               note this is not needed but provides flexablity for pressing and releasing buttons later
+                */
                 if(event.getAction() == MotionEvent.ACTION_DOWN) {
                     connection.sendString(".f"+ MGoal +',');
                 }
@@ -124,6 +133,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         return true;
     }
 
+    /**
+     * Handles a connection
+     */
     public class Connection {
         volatile Socket socket = null;
         final String address;
@@ -133,12 +145,20 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         InputStream inputStream;
         BufferedReader reader;
 
+        /**
+         * Assigns values to address and port
+         */
         Connection(final String address, int port) {
             this.address = address;
             this.port = port;
         }
 
+        /**
+         * Creates a socket, assigns all streams
+         * Creates a listening thread for input
+         */
         void boot() {
+            //This is for my gui pls ignore
             final ImageView good,bad;
             good = findViewById(R.id.ConnectedInd);
             bad = findViewById(R.id.ErrConnect);
@@ -146,19 +166,24 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             bad.setVisibility(View.GONE);
             restartButton.setVisibility(View.INVISIBLE);
             findViewById(R.id.connectedMeasure).setVisibility(View.VISIBLE);
+
             Thread connection = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        //Connect socket and wait until its really connected
                         socket = new Socket(address, port);
                         if (socket == null) {
                             do {
                             } while (socket == null);
                         }
+                        //Grab streams after socket made
                         outputStream = socket.getOutputStream();
                         writer = new OutputStreamWriter(outputStream, StandardCharsets.US_ASCII);
                         InputStream inputStream = socket.getInputStream();
                         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.US_ASCII));
+
+                        //More gui stuff
                         runOnUiThread(new Runnable() {
                                           @Override
                                           public void run() {
@@ -168,6 +193,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                                       });
 
                     } catch (IOException e) {
+                        //Handles an exception and does more gui stuff
                         final String emessage = e.getLocalizedMessage();
                         Looper.prepare();
                         Log.v("Ben", emessage);
@@ -185,7 +211,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 }
             });
 
-
+            //This is the listener for input, it handles input from the brobot by passing them to
+            //@handleInput()
             Thread listener = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -203,6 +230,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
                 }
             });
+            //Starts the two threads
             connection.start();
             listener.start();
 
@@ -211,13 +239,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
         /**
          * . = command
-         * .f = foward
+         * , = end command
+         * .f = forward
          * .b = backwards
          * .l = turn left
          * .r = turn right
          * .s = scan
          * .m = play song
-         * .t = stop action
+         *
          * @param stringin string to send, see header for command code
          */
         void sendString(String stringin) {
@@ -227,15 +256,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 @Override
                 public void run() {
                     try {
-//                        byte[] bytes = string.getBytes(StandardCharsets.US_ASCII);
-//                        for (int i = 0; i < bytes.length; i++) {
-//                            outputStream.write(bytes, i, 1);
-//                            outputStream.flush();
-//                            Thread.sleep(100);
-//                        }
-//                        outputStream.write(13);
-//                        outputStream.write(13);
-//                        outputStream.flush();
                         byte[] bytes = string.getBytes(StandardCharsets.US_ASCII);
                         DataOutputStream dos = new DataOutputStream(connection.socket.getOutputStream());
                         dos.write(13);
@@ -253,6 +273,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             thr.start();
         }
 
+        /**
+         * Checks if the connection is valid
+         * @return
+         */
         boolean isConnected(){
             return socket!=null && socket.isConnected();
         }

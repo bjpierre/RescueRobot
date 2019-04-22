@@ -2,7 +2,7 @@
  * UART.c
  *
  *  Created on: Feb 21, 2019
- *      Author: ryanjl9
+ *      Author: ryanjl9, Ben Pierre, Anthony Rosenhamer
  *
  */
 
@@ -25,8 +25,6 @@ char message[21];
 char command[21];
 int len;
 int distance = 0;
-oi_t* sensor_data;
-
 /**
  * uart_init: This method is used to initialize the uart module
  *
@@ -34,7 +32,6 @@ oi_t* sensor_data;
  */
 void uart_init()
 {
-    sensor_data = oi_alloc();
     SYSCTL_RCGCGPIO_R |= 0x02;
     SYSCTL_RCGCUART_R |= 0x02;
 
@@ -79,6 +76,7 @@ void uart_sendChar(char ldata)
     while((UART1_FR_R & 0x20) != 0);    // Loops until a character is available to be transmitted
     UART1_DR_R = ldata;
 }
+
 
 /**
  * uart_recieve: This method is used to recieve data from putty
@@ -125,40 +123,27 @@ void uart_handler()
             lcd_printf("%i , %s",target, sub);
             if (message[1]== 'f')
             {
-                move_forward(sensor_data, target);
+                move_forward(target);
             }
             else if (message[1]== 'b')
             {
-                move_backward(sensor_data, target);
+                move_backward(target);
             }
             else if (message[1] =='l')
             {
-                turn_left(sensor_data, target);
+                turn_left(target);
             }
             else
             {
-                turn_right(sensor_data,target);
+                turn_right(target);
             }
         }else if(message[1]=='m'){
             lcd_printf("BUM BUM BUM< SWEEEETTTT CARRROOOLLINNNNEEE");
         }else if(message[1]=='s'){
             lcd_printf("Scanning, Scanning");
+            radarSweep();
         }
     }
-
-//	if(data == 127 && len > 0) message[--len] = '\0';
-//
-//	if(len==20 || data==13){
-//		lcd_clear();
-//
-//		message[len] = '\0';
-//		len++;
-//
-//		lcd_printf("%s", message);
-//
-//		memset(message, 0, len);
-//		len = 0;
-//	}
 
     UART1_ICR_R |= 0x0030;
 }
@@ -217,32 +202,16 @@ void radarSweep(){
                pingDistance = ping_distance;
                sprintf(message, "%0.2f", irDistance);
                uart_sendStr(message);
+               uart_sendChar(' ');
                sprintf(message, "%0.2f", pingDistance);
                uart_sendStr(message);
                uart_sendChar((char) 13);
 
+               timer_waitMillis(100);
                degree+=2;
                if(degree<181)
                    move_servo(degree);
 
            }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

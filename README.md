@@ -13,3 +13,4 @@
 - y bot y location
 - a bot angle
 - p initiate sweep
+- o object detected

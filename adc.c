@@ -99,7 +99,7 @@ void ir_calibrate(){
  */
 void ir_getDistance(){
 	double dist = ir_value;
-	ir_distance = 6*pow(10,6)*pow(dist,-1.701);
+	ir_distance = 138421*pow(dist,-1.2058);
 }
 
 

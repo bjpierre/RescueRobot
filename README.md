@@ -12,3 +12,4 @@
 - x bot x location
 - y bot y location
 - a bot angle
+- p initiate sweep

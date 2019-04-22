@@ -20,5 +20,8 @@ int checkInterrupts();
 
 extern int direction[];
 extern int stop_movement;
+volatile int botX;
+volatile int botY;
+volatile int botAngle;
 
 #endif /* MOVEMENT_H_ */

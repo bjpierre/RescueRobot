@@ -76,6 +76,7 @@ void uart_init()
  */
 void uart_sendChar(char ldata)
 {
+    while((UART1_FR_R & 0x20) != 0);    // Loops until a character is available to be transmitted
     UART1_DR_R = ldata;
 }
 

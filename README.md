@@ -1,6 +1,6 @@
 # CPRE 288 Final Project
 
-#Netoworking commands
+#Networking commands
 . new command
 , end of command
 f move foward

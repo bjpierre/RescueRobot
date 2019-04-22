@@ -16,8 +16,8 @@ int clockwise;
  * findMatch: This method finds the match value for the timer
  */
 int findMatch(double angle){
-	const int MS = 7800;
-	int x = (int)(((8/2.2)*MS*(angle/180.0)) + MS);
+	const int MS = 6942;
+	int x = (int) (((4.1345) * MS * (angle/180.0)) + MS);
 	return x;
 }
 

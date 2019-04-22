@@ -55,8 +55,8 @@ void move_forward(int centimeters) {
 		oi_update(sensor);							//desired, keep going
 		bot_distance += sensor -> distance;
 	}
-    botX += (sum * 0.938 + 2.38 ) * cos(botAngle * 3.1416 / 180);
-    botY += (sum * 0.938 + 2.38 ) * sin(botAngle * 3.1416 / 180);
+    botX += (bot_distance * 0.938 + 2.38 ) * cos(botAngle * 3.1416 / 180);
+    botY += (bot_distance * 0.938 + 2.38 ) * sin(botAngle * 3.1416 / 180);
 
 
 	oi_setWheels(0, 0);

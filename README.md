@@ -1,7 +1,7 @@
 # CPRE 288 Final Project
 
 #Networking commands
-. new command
+. new command \n
 , end of command
 f move foward
 b move back

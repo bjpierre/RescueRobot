@@ -125,7 +125,7 @@ void uart_handler()
             {
                 char positionStr[10] = { 0 };
                 move_forward(target);
-                sprintf(positionStr, ".%c %d %d,", currentPosition.appCommand, botX, botY);
+                sprintf(positionStr, ".o %c %d %d,", currentPosition.appCommand, botX, botY);
                 uart_sendStr(positionStr);
             }
             else if (message[1]== 'b')
@@ -133,21 +133,21 @@ void uart_handler()
 
                 char positionStr[10] = { 0 };
                 move_backward(target);
-                sprintf(positionStr, ".%c %d %d,", currentPosition.appCommand, botX, botY);
+                sprintf(positionStr, ".o %c %d %d,", currentPosition.appCommand, botX, botY);
                 uart_sendStr(positionStr);
             }
             else if (message[1] =='l')
             {
                 char positionStr[10] = { 0 };
                 turn_left(target);
-                sprintf(positionStr, ".%c %d %d,", currentPosition.appCommand, botX, botY);
+                sprintf(positionStr, ".o %c %d %d,", currentPosition.appCommand, botX, botY);
                 uart_sendStr(positionStr);
             }
             else
             {
                 char positionStr[10] = { 0 };
                 turn_right(target);
-                sprintf(positionStr, ".%c %d %d,", currentPosition.appCommand, botX, botY);
+                sprintf(positionStr, ".o %c %d %d,", currentPosition.appCommand, botX, botY);
                 uart_sendStr(positionStr);
             }
         }else if(message[1]=='m'){

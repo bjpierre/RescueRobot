@@ -123,19 +123,32 @@ void uart_handler()
             lcd_printf("%i , %s",target, sub);
             if (message[1]== 'f')
             {
+                char positionStr[10] = { 0 };
                 move_forward(target);
+                sprintf(positionStr, ".%c %d %d,", currentPosition.appCommand, botX, botY);
+                uart_sendStr(positionStr);
             }
             else if (message[1]== 'b')
             {
+
+                char positionStr[10] = { 0 };
                 move_backward(target);
+                sprintf(positionStr, ".%c %d %d,", currentPosition.appCommand, botX, botY);
+                uart_sendStr(positionStr);
             }
             else if (message[1] =='l')
             {
+                char positionStr[10] = { 0 };
                 turn_left(target);
+                sprintf(positionStr, ".%c %d %d,", currentPosition.appCommand, botX, botY);
+                uart_sendStr(positionStr);
             }
             else
             {
+                char positionStr[10] = { 0 };
                 turn_right(target);
+                sprintf(positionStr, ".%c %d %d,", currentPosition.appCommand, botX, botY);
+                uart_sendStr(positionStr);
             }
         }else if(message[1]=='m'){
             lcd_printf("BUM BUM BUM< SWEEEETTTT CARRROOOLLINNNNEEE");

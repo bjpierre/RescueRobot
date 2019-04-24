@@ -14,11 +14,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.RadarChart;
+import com.github.mikephil.charting.charts.ScatterChart;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.RadarData;
 import com.github.mikephil.charting.data.RadarDataSet;
 import com.github.mikephil.charting.data.RadarEntry;
+import com.github.mikephil.charting.data.ScatterData;
+import com.github.mikephil.charting.data.ScatterDataSet;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.interfaces.datasets.IScatterDataSet;
+import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -30,32 +38,44 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
     final String ADDRESS = "192.168.1.1";
+    //final String ADDRESS = "10.0.2.2";
     final int PORT = 288;
-    ImageButton fowardButton, backButton, leftButton, rightButton, songButton, scanButton, restartButton;
+    ImageButton fowardButton, backButton, leftButton, rightButton, songButton, scanButton, restartButton, toggleButton;
     TextView receivedText;
     EditText MTargetGoal, RTargetGoal;
     Connection connection;
     RadarChart radarChart;
+    ScatterChart scatterChart;
     StringBuilder stringBuilder;
     boolean scanComplete = false;
     ArrayList<RadarEntry> irDataVals = null;
     ArrayList<RadarEntry> pingDataVals = null;
+    ArrayList<Entry> walls = new ArrayList<>();
+    ArrayList<Entry> objects = new ArrayList<>();
+    ArrayList<Entry> holes = new ArrayList<>();
     String labels[];
+    Boolean visibilty = true;
+    private boolean recObj;
+    private boolean scanObj;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.v("Debug",""+1);
         buildLists();
         stringBuilder = new StringBuilder();
         labels = new String[181];
         initializeLabels(labels);
         Log.v("Graph", "Filled empty vals");
-
+        recObj = false;
+        scanObj = false;
+        toggleButton = findViewById(R.id.ToggleButton);
         fowardButton = findViewById(R.id.fButton);
         backButton = findViewById(R.id.bButton);
         leftButton = findViewById(R.id.lButton);
@@ -67,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         RTargetGoal = findViewById(R.id.RTargetGoal);
 
         radarChart = findViewById(R.id.radarChart);
+        radarChart.setVisibility(View.INVISIBLE);
         receivedText = findViewById(R.id.RecievedText);
 
 
@@ -78,6 +99,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         songButton.setOnTouchListener(this);
         scanButton.setOnTouchListener(this);
         restartButton.setOnTouchListener(this);
+        toggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleViews();
+            }
+        });
 
 
         //Call connection constructor and boot it
@@ -85,6 +112,42 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         Log.v("Connection", "Connecting");
         connection.boot();
         Log.v("Connection", "Connected");
+
+
+        //Chart shiz
+        scatterChart = findViewById(R.id.scatterGraph);
+        scatterChart.getDescription().setEnabled(false);
+
+        scatterChart.setDrawGridBackground(false);
+        scatterChart.setTouchEnabled(true);
+        scatterChart.setMaxHighlightDistance(50f);
+
+        // enable scaling and dragging
+        scatterChart.setDragEnabled(true);
+        scatterChart.setScaleEnabled(true);
+
+        scatterChart.setMaxVisibleValueCount(200);
+        scatterChart.setPinchZoom(true);
+
+        Legend l = scatterChart.getLegend();
+        l.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
+        l.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
+        l.setOrientation(Legend.LegendOrientation.VERTICAL);
+        l.setDrawInside(false);
+//        l.setTypeface(tfLight);
+        l.setXOffset(5f);
+
+        YAxis yl = scatterChart.getAxisLeft();
+//        yl.setTypeface(tfLight);
+        yl.setAxisMinimum(0f); // this replaces setStartAtZero(true)
+
+        scatterChart.getAxisRight().setEnabled(false);
+
+        XAxis xl = scatterChart.getXAxis();
+//        xl.setTypeface(tfLight);
+        xl.setDrawGridLines(false);
+
+
     }
 
     /**
@@ -92,39 +155,141 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
      *
      * @param input
      */
-    protected void handleInput(char input) {
-        Log.v("input","Got input");
-        if(input=='p'){
-            buildLists();
+    public void handleInput(char input) {
+        Log.v("input", "Got:" + input);
+        if (recObj) {
+            if (input == ',') {
+                parseObject(stringBuilder.toString());
+                stringBuilder.delete(0, stringBuilder.length());
+                recObj = false;
+            } else
+                stringBuilder.append(input);
+        } else if (scanObj) {
+            if (input == ',') {
+                parseScan(stringBuilder.toString());
+                stringBuilder.delete(0, stringBuilder.length());
+                if (irDataVals.size() > 180) {
+                    scanObj = false;
+                    startGraph();
+                    System.out.println("Scan Completed");
+                }
+            } else
+                stringBuilder.append(input);
+
+        } else if (input == 'o') { // start listening for an object
+            recObj = true;
+            return;
+        } else if (input == 'p') { // start listening for a list of stuff
+            buildLists(); // clear lists
+            scanObj = true;
             return;
         }
-        if (input == 13) {
-            stringBuilder.append(input);
-            scanComplete = true;
-        } else {
-            stringBuilder.append(input);
-        }
+    }
+//    public void handleInput(char input) {
+//        Log.v("input", "Got input = " + input);
+//        if(recObj){
+//            if(input == ','){
+//                parseObject(stringBuilder.toString());
+//                stringBuilder.delete(0,stringBuilder.length());
+//                recObj=false;
+//            }
+//            else stringBuilder.append(input);
+//        }else if(!scanComplete){
+//            if(input==(char)13){
+//                parseScan(stringBuilder.toString());
+//                stringBuilder.delete(0,stringBuilder.length());
+//                if(irDataVals.size()>179) scanComplete=true;
+//            }
+//        } else if(input == 'o'){ //start listening for an object
+//            recObj=true;
+//            return;
+//        }else if(input == 'p'){ //start listening for a list of stuff
+//            buildLists(); //clear lists
+//            scanComplete=false;
+//            return;
+//        }
+//
+////        if(input=='o'){
+////            recObj = true;
+////            stringBuilder.append(input);
+////        }
+////        if (input == ',' && recObj) {
+////            stringBuilder.append(input);
+////            parseString(stringBuilder.toString());
+////            recObj = false;
+////        } else if(recObj) {
+////            stringBuilder.append(input);
+////        }
+////        if (input == 'p') {
+////            buildLists();
+////            scanComplete = false;
+////            return;
+////        }
+////        if (input == 13 && !scanComplete) {
+////            stringBuilder.append(input);
+////            scanComplete = true;
+////        } else if(!scanComplete) {
+////            stringBuilder.append(input);
+////        }
+//    }
+
+    private void parseScan(String toString) {
+        Scanner sc = new Scanner(toString);
+        sc.useDelimiter(" ");
+        String tempa = sc.next();
+        String tempb = sc.next();
+        float irData = Float.parseFloat(tempa);
+        float pingData = Float.parseFloat(tempb);
+        irDataVals.add(0, new RadarEntry(irData > 50 ? 50 : irData));
+        pingDataVals.add(0, new RadarEntry(pingData > 50 ? 50 : pingData));
+        Log.v("Graph","Radar = "  + tempa +"," + tempb + "at: " + irDataVals.size());
+
+        sc.close();
     }
 
-    public void parseString(String input) {
-        boolean irDataDone = false;
-        StringBuilder numberToAdd = new StringBuilder();
-        for (int i = 0; i < input.length(); i++) {
-            if (Character.isDigit(input.charAt(i)) || input.charAt(i) == '.') {
-                numberToAdd.append(input.charAt(i));
-            } else if (!irDataDone) {
-                irDataVals.add(0,new RadarEntry((Float.valueOf(numberToAdd.toString()) > 50 ? 50 : Float.valueOf(numberToAdd.toString()))));
-                numberToAdd.delete(0, numberToAdd.length());
-                irDataDone = true;
-            } else if (input.charAt(i) == (char) 13) {
-                pingDataVals.add(0,new RadarEntry((Float.valueOf(numberToAdd.toString()) > 50 ? 50 : Float.valueOf(numberToAdd.toString()))));
-                numberToAdd.delete(0, numberToAdd.length());
-            }
+    private void parseObject(String toString) {
+        Scanner sc = new Scanner(toString);
+        sc.useDelimiter(" ");
+        char type = sc.next().charAt(0);
+        int x = Integer.parseInt(sc.next());
+        int y = Integer.parseInt(sc.next());
+        sc.close();
+        scatterAddValues(x,y,(Character.isAlphabetic(type) ? 1 : 2));
+        System.out.println("Added " + type + " at : " + x + "," + y);
 
-        }
-
-        if (pingDataVals.size() > 179) startGraph();
     }
+
+//    public void parseString(String input) {
+//        Log.v("Ben", input.charAt(0)+"");
+//        if(input.charAt(0) == 'o'){
+//            Scanner sc = new Scanner(input);
+//            sc.useDelimiter(" ");
+//            char type = sc.next().charAt(1);
+//            int x = Integer.parseInt(sc.next());
+//            int y = Integer.parseInt(sc.next());
+//            sc.close();
+//            scatterAddValues(x,y,(Character.isAlphabetic(type) ? 1 : 2));
+//
+//        }else {
+//            boolean irDataDone = false;
+//            StringBuilder numberToAdd = new StringBuilder();
+//            for (int i = 0; i < input.length(); i++) {
+//                if (Character.isDigit(input.charAt(i)) || input.charAt(i) == '.') {
+//                    numberToAdd.append(input.charAt(i));
+//                } else if (!irDataDone) {
+//                    irDataVals.add(0, new RadarEntry((Float.valueOf(numberToAdd.toString()) > 50 ? 50 : Float.valueOf(numberToAdd.toString()))));
+//                    numberToAdd.delete(0, numberToAdd.length());
+//                    irDataDone = true;
+//                } else if (input.charAt(i) == (char) 13) {
+//                    pingDataVals.add(0, new RadarEntry((Float.valueOf(numberToAdd.toString()) > 50 ? 50 : Float.valueOf(numberToAdd.toString()))));
+//                    numberToAdd.delete(0, numberToAdd.length());
+//                }
+//
+//            }
+//
+//            if (pingDataVals.size() > 179) startGraph();
+//        }
+//    }
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -179,6 +344,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     connection.sendString(".m,");
                 }
                 break;
+
         }
         return true;
     }
@@ -275,18 +441,22 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        if (scanComplete) {
-                            System.out.println(stringBuilder.toString());
-                            parseString(stringBuilder.toString());
-                            stringBuilder.delete(0, stringBuilder.length());
-                            scanComplete = false;
-                        }
+//                        if (scanComplete) {
+//                            System.out.println(stringBuilder.toString());
+//                            parseString(stringBuilder.toString());
+//                            stringBuilder.delete(0, stringBuilder.length());
+//                            scanComplete = false;
+//                        }
                     }
                 }
             });
             //Starts the two threads
+            Log.v("Debug", "Statting thread");
+
             connection.start();
             while (inputStream == null) ;
+            Log.v("Debug", "Out her again");
+
             listener.start();
             Log.v("Connection", "Starting input thread");
 
@@ -341,8 +511,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
     public void startGraph() {
-        Collections.rotate(irDataVals,-23);
-        Collections.rotate(pingDataVals,-23);
+        Collections.rotate(irDataVals, -45);
+        Collections.rotate(pingDataVals, -45);
 
         final RadarDataSet dataSet1 = new RadarDataSet(irDataVals, "IR Sensor");
         final RadarDataSet dataSet2 = new RadarDataSet(pingDataVals, "Ping Sensor");
@@ -392,12 +562,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
     public static <RadarEntry> ArrayList<RadarEntry> manipulate(ArrayList<RadarEntry> aL) {
         RadarEntry temp = aL.get(150);
-        for(int i=135; i<180; i++)
-            aL.set(i,aL.get(i-135));
-        for(int i=0; i<45;i++)
-            aL.set(i, aL.get(i+45));
-        for(int i=45; i<135;i++)
-            aL.set(i,temp);
+        for (int i = 135; i < 180; i++)
+            aL.set(i, aL.get(i - 135));
+        for (int i = 0; i < 45; i++)
+            aL.set(i, aL.get(i + 45));
+        for (int i = 45; i < 135; i++)
+            aL.set(i, temp);
         return aL;
     }
 
@@ -407,7 +577,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         }
     }
 
-    private void buildLists(){
+    private void buildLists() {
         irDataVals = new ArrayList<>();
         pingDataVals = new ArrayList<>();
         while (irDataVals.size() < 90) {
@@ -416,4 +586,59 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         }
     }
 
+
+
+
+
+    private void scatterAddValues(int xval, int yval, int type){
+        if(type == 0){
+            walls.add(new Entry(xval,yval));
+        } else if(type ==1){
+            objects.add(new Entry(xval,yval));
+        } else if (type ==2){
+            holes.add(new Entry(xval,yval));
+        }
+
+        ScatterDataSet set1 = new ScatterDataSet(walls, "DS 1");
+        set1.setScatterShape(ScatterChart.ScatterShape.SQUARE);
+        set1.setColor(ColorTemplate.COLORFUL_COLORS[0]);
+        ScatterDataSet set2 = new ScatterDataSet(objects, "DS 2");
+        set2.setScatterShape(ScatterChart.ScatterShape.CIRCLE);
+        set2.setScatterShapeHoleColor(ColorTemplate.COLORFUL_COLORS[3]);
+        set2.setScatterShapeHoleRadius(3f);
+        set2.setColor(ColorTemplate.COLORFUL_COLORS[1]);
+        ScatterDataSet set3 = new ScatterDataSet(holes, "DS 3");
+        set3.setShapeRenderer(new CustomScatterShapeRenderer());
+        set3.setColor(ColorTemplate.COLORFUL_COLORS[2]);
+
+        set1.setScatterShapeSize(8f);
+        set2.setScatterShapeSize(8f);
+        set3.setScatterShapeSize(8f);
+
+        ArrayList<IScatterDataSet> dataSets = new ArrayList<>();
+        dataSets.add(set1); // add the data sets
+        dataSets.add(set2);
+        dataSets.add(set3);
+
+        // create a data object with the data sets
+        ScatterData data = new ScatterData(dataSets);
+//        data.setValueTypeface(tfLight);
+
+        scatterChart.setData(data);
+        scatterChart.invalidate();
+    }
+
+    public void toggleViews(){
+        if(visibilty){
+            visibilty = !visibilty;
+            radarChart.setVisibility(View.VISIBLE)
+            ;
+            scatterChart.setVisibility(View.GONE);
+        }else{
+            visibilty = !visibilty;
+            radarChart.setVisibility(View.GONE)
+            ;
+            scatterChart.setVisibility(View.VISIBLE);
+        }
+    }
 }

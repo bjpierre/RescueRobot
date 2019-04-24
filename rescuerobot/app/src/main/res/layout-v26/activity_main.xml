@@ -191,7 +191,8 @@
         android:text="@string/retry"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/connectedMeasure"
-        tools:visibility="invisible" />
+        tools:visibility="invisible"
+        android:contentDescription="@string/todo" />
 
     <TextView
         android:id="@+id/textView3"

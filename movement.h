@@ -14,14 +14,17 @@ void movement_init(oi_t* s);
 void move_forward(int centimeters);
 void turn_right(int degrees);
 void turn_left(int degrees);
-void move_backwards(int centimeters);
+void move_backward(int centimeters);
 void move();
 int checkInterrupts();
 
-extern int direction[];
-extern int stop_movement;
 volatile int botX;
 volatile int botY;
 volatile int botAngle;
+volatile struct position {
+    char appCommand;
+    int objectX;
+    int objectY;
+} currentPosition;
 
 #endif /* MOVEMENT_H_ */

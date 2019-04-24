@@ -123,19 +123,32 @@ void uart_handler()
             lcd_printf("%i , %s",target, sub);
             if (message[1]== 'f')
             {
+                char positionStr[10] = { 0 };
                 move_forward(target);
+                sprintf(positionStr, ".o %c %d %d,", currentPosition.appCommand, botX, botY);
+                uart_sendStr(positionStr);
             }
             else if (message[1]== 'b')
             {
+
+                char positionStr[10] = { 0 };
                 move_backward(target);
+                sprintf(positionStr, ".o %c %d %d,", currentPosition.appCommand, botX, botY);
+                uart_sendStr(positionStr);
             }
             else if (message[1] =='l')
             {
+                char positionStr[10] = { 0 };
                 turn_left(target);
+                sprintf(positionStr, ".o %c %d %d,", currentPosition.appCommand, botX, botY);
+                uart_sendStr(positionStr);
             }
             else
             {
+                char positionStr[10] = { 0 };
                 turn_right(target);
+                sprintf(positionStr, ".o %c %d %d,", currentPosition.appCommand, botX, botY);
+                uart_sendStr(positionStr);
             }
         }else if(message[1]=='m'){
             lcd_printf("BUM BUM BUM< SWEEEETTTT CARRROOOLLINNNNEEE");
@@ -205,7 +218,7 @@ void radarSweep(){
                uart_sendChar(' ');
                sprintf(message, "%0.2f", pingDistance);
                uart_sendStr(message);
-               uart_sendChar((char) 13);
+               uart_sendChar(',');
 
                timer_waitMillis(100);
                degree+=2;

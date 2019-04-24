@@ -218,7 +218,7 @@ void radarSweep(){
                uart_sendChar(' ');
                sprintf(message, "%0.2f", pingDistance);
                uart_sendStr(message);
-               uart_sendChar((char) 13);
+               uart_sendChar(',');
 
                timer_waitMillis(100);
                degree+=2;

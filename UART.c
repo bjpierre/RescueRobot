@@ -200,8 +200,6 @@ void uart_sendStr(const char *data){
 
 void radarSweep(){
     double degree =0;
-    double irDistance;
-    double pingDistance;
     char message[20]; // String to hold measurements
     move_servo(degree);//Moves to starting position
     timer_waitMillis(500);

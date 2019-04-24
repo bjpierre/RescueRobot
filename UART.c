@@ -211,12 +211,12 @@ void radarSweep(){
         while(degree<181)
            {
 
-               irDistance = adc_read();
-               pingDistance = ping_distance;
-               sprintf(message, "%0.2f", irDistance);
+               ir_getDistance();
+               ping_getDistance();
+               sprintf(message, "%0.2f", ir_distance);
                uart_sendStr(message);
                uart_sendChar(' ');
-               sprintf(message, "%0.2f", pingDistance);
+               sprintf(message, "%0.2f", ping_distance);
                uart_sendStr(message);
                uart_sendChar(',');
 
